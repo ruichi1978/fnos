@@ -48,11 +48,10 @@ tmp_image="${tmp_path}/tmp_image"
 [[ -d "${fnnas_debs}" ]] || mkdir -p "${fnnas_debs}"
 [[ -d "${fnnas_dtbs}" ]] || mkdir -p "${fnnas_dtbs}"
 
-# Set the fnnas download repository from github.com
-fnnas_repo="https://github.com/ophub/fnnas"
-# Set the target fnnas kernel debs version (e.g., 6.12.y)
+# Set the fnnas kernel debs files download repository from github.com
+debs_repo="https://github.com/ophub/fnnas"
+# Set the fnnas kernel debs version (e.g., 6.12.y)
 debs_version="6.12.y"
-
 # Installation of additional deb packages inside chroot(amlogic/allwinner/rockchip/none)
 debs_install="none"
 # By default, download and use dtbs files(true/yes)
@@ -110,8 +109,8 @@ init_var() {
     echo -e "${STEPS} Start Initializing Variables..."
 
     # If it is followed by [ : ], it means that the option requires a parameter value
-    local options="r:k:e:t:"
-    local long_options="kernel-repository:,kernel:,debs-install:,dtbs-install:"
+    local options="d:k:e:t:"
+    local long_options="debs-repository:,kernel:,debs-install:,dtbs-install:"
 
     parsed_args=$(getopt -o "${options}" --long "${long_options}" -- "${@}")
     [[ ${?} -ne 0 ]] && error_msg "Parameter parsing failed."
@@ -119,12 +118,12 @@ init_var() {
 
     while true; do
         case "${1}" in
-        -r | --kernel-repository)
+        -d | --debs-repository)
             if [[ -n "${2}" ]]; then
-                fnnas_repo="${2}"
+                debs_repo="${2}"
                 shift 2
             else
-                error_msg "Invalid -r parameter [ ${2} ]!"
+                error_msg "Invalid -d parameter [ ${2} ]!"
             fi
             ;;
         -k | --kernel)
@@ -167,9 +166,9 @@ download_debs() {
     cd "${current_path}"
 
     # Adjust the custom kernel repository url format
-    [[ -z "${fnnas_repo}" ]] && fnnas_repo="ophub/fnnas"
-    [[ "${fnnas_repo}" =~ ^https: ]] && fnnas_repo="$(echo ${fnnas_repo} | awk -F'/' '{print $4"/"$5}')"
-    kernel_api="https://github.com/${fnnas_repo}"
+    [[ -z "${debs_repo}" ]] && debs_repo="ophub/fnnas"
+    [[ "${debs_repo}" =~ ^https: ]] && debs_repo="$(echo ${debs_repo} | awk -F'/' '{print $4"/"$5}')"
+    kernel_api="https://github.com/${debs_repo}"
 
     # Identify the kernel <VERSION> and <PATCHLEVEL>, such as [ 6.1 ]
     kernel_verpatch="$(echo ${debs_version} | awk -F '.' '{print $1"."$2}')"
@@ -187,7 +186,7 @@ download_debs() {
 
     # Set the debs download path
     tmp_debs_path="$(mktemp -d)"
-    debs_down_from="https://github.com/${fnnas_repo}/releases/download/fnnas_debs/${latest_version}.tar.gz"
+    debs_down_from="https://github.com/${debs_repo}/releases/download/fnnas_debs/${latest_version}.tar.gz"
 
     # Download the kernel debs files. If the download fails, try again 10 times.
     echo -e "${INFO} Downloading kernel debs files from: [ ${debs_down_from} ]"

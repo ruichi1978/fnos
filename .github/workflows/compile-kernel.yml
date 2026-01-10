@@ -10,13 +10,6 @@ on:
   repository_dispatch:
   workflow_dispatch:
     inputs:
-      fnnas_repo:
-        description: "Set fnnas source repository"
-        required: false
-        default: "ophub/fnnas"
-        type: choice
-        options:
-          - ophub/fnnas
       fnnas_base_version:
         description: "Select fnnas base image version"
         required: false
@@ -25,6 +18,10 @@ on:
         options:
           - amlogic_300
           - rockchip_296
+      debs_repo:
+        description: "Set fnnas debs repository"
+        required: false
+        default: "ophub/fnnas"
       debs_version:
         description: "Set fnnas debs version"
         required: false
@@ -158,7 +155,7 @@ jobs:
         if: ${{ steps.down.outputs.status }} == 'success' && !cancelled()
         with:
           build_target: kernel
-          fnnas_repo: ${{ inputs.fnnas_repo }}
+          debs_repo: ${{ inputs.debs_repo }}
           debs_version: ${{ inputs.debs_version }}
           debs_install: ${{ inputs.debs_install }}
           dtbs_install: ${{ inputs.dtbs_install }}
