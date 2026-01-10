@@ -214,18 +214,19 @@ sudo apt-get install -y $(cat make-fnnas/script/ubuntu2404-make-fnnas-depends)
 | `${{ env.PACKAGED_OUTPUTDATE }}` | 04.13.1058    | 打包日期（月.日.时分）         |
 | `${{ env.PACKAGED_STATUS }}`     | success       | 打包状态：success / failure  |
 
-## 使用 GitHub Actions 编译内核
+## 使用 GitHub Actions 编译 fnnas 内核
 
-内核的编译方法详见 [compile-kernel](https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/compile-kernel) 的说明，使用的内核和 Armbian/OpenWrt 系统中使用的内核通用。
+飞牛专用内核的编译方法详见 [compile-kernel](.github/workflows/build-fnnas-kernel.yml) 的说明。
 
 ```yaml
 - name: Compile the kernel
-  uses: ophub/amlogic-s9xxx-armbian@main
+  uses: ophub/fnnas@main
   with:
     build_target: kernel
-    kernel_version: 6.12.y
-    kernel_auto: true
-    kernel_sign: -yourname
+    fnnas_path: fnnas/*.img  # 指定 FnNAS 镜像文件路径
+    debs_version: 6.12.y     # 指定内核版本。目前只有 6.12.y 可选
+    debs_install: amlogic    # 指定设备平台。选项：amlogic / rockchip / allwinner / none
+    dtbs_install: true       # 是否自动添加飞牛官方没有的 DTB 文件。选项： true / false
 ```
 
 ## FnNAS 贡献者

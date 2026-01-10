@@ -216,18 +216,19 @@ Uploading to `Releases` requires setting `Workflow Read and Write permissions` f
 | `${{ env.PACKAGED_OUTPUTDATE }}` | 04.13.1058    | Packaging date (month.day.hourminute) |
 | `${{ env.PACKAGED_STATUS }}`     | success       | Packaging status: success / failure   |
 
-## Compiling Kernel using GitHub Actions
+## Compiling fnnas Kernel using GitHub Actions
 
-For kernel compilation methods, see the instructions in [compile-kernel](https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/compile-kernel). The kernel used is common with the kernel used in Armbian/OpenWrt systems.
+For details on how to compile the FnNAS-specific kernel, please refer to the instructions in [compile-kernel](.github/workflows/build-fnnas-kernel.yml).
 
 ```yaml
-- name: Compile the kernel
-  uses: ophub/amlogic-s9xxx-armbian@main
+- name: Compile fnnas kernel
+  uses: ophub/fnnas@main
   with:
     build_target: kernel
-    kernel_version: 6.12.y
-    kernel_auto: true
-    kernel_sign: -yourname
+    fnnas_path: fnnas/*.img  # Set the path of the official Arm64 original FnNAS image file.
+    debs_version: 6.12.y     # Specify the kernel version. Currently, only 6.12.y is available.
+    debs_install: amlogic    # Specify the device platform. Options: amlogic / rockchip / allwinner / none
+    dtbs_install: true       # Automatically add DTB files missing from the official. Options: true / false
 ```
 
 ## FnNAS Contributors
