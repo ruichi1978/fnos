@@ -21,6 +21,28 @@
 # add_scripts         : Setup u-boot hooks and detect version
 # generate_uinitrd    : Run update-initramfs
 #
+
+
+# 1. 创建2G大小的swap文件（U盘根分区，空间不足可改1G）
+fallocate -l 2G /swapfile
+
+# 2. 限制swap文件权限（仅root可访问，避免安全风险）
+chmod 600 /swapfile
+
+# 3. 格式化swap文件
+mkswap /swapfile
+
+# 4. 临时启用swap（当前chroot会话生效）
+swapon /swapfile
+
+# 5. 写入/etc/fstab，开机自动挂载（永久生效）
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+# 6. 优化swap策略（1G内存建议swappiness=20，减少内存换出）
+echo 'vm.swappiness=20' >> /etc/sysctl.conf
+sysctl -p /etc/sysctl.conf
+
+
 #========================== Set make environment variables ==========================
 
 # Receive arguments
