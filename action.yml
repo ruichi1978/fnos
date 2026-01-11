@@ -136,10 +136,10 @@ runs:
 
             cd ${{ github.action_path }}
             make_command=""
+            [[ -n "${{ inputs.debs_repo }}" ]] && make_command="${make_command} -r ${{ inputs.debs_repo }}"
+            [[ -n "${{ inputs.debs_version }}" ]] && make_command="${make_command} -k ${{ inputs.debs_version }}"
             [[ -n "${{ inputs.debs_install }}" ]] && make_command="${make_command} -e ${{ inputs.debs_install }}"
             [[ -n "${{ inputs.dtbs_install }}" ]] && make_command="${make_command} -t ${{ inputs.dtbs_install }}"
-            [[ -n "${{ inputs.debs_repo }}" ]] && make_command="${make_command} -d ${{ inputs.debs_repo }}"
-            [[ -n "${{ inputs.debs_version }}" ]] && make_command="${make_command} -k ${{ inputs.debs_version }}"
             read -r -a make_args <<< "${make_command}"
             sudo ./rekernel "${make_args[@]}"
 

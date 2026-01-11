@@ -140,7 +140,7 @@ To update all service scripts in the local system to the latest version, login t
 fnnas-sync
 ```
 
-## Local Packaging
+## Local Packaging fnnas Image
 
 1. Clone the repository locally: `git clone --depth 1 https://github.com/ophub/fnnas.git`
 
@@ -157,7 +157,7 @@ sudo apt-get install -y $(cat make-fnnas/script/ubuntu2404-make-fnnas-depends)
 
 2. Enter the `~/fnnas` root directory, then run the sudo `./renas -b s905x3 -k 6.12.63` command to generate the FnNAS image file for the specified board. The generated files are saved in the `~/fnnas/out` directory.
 
-- ### Local Packaging Parameter Description
+- ### Local Packaging fnnas image Parameter Description
 
 | Parameter | Meaning     | Description |
 | ----      | ----------  | ----------  |
@@ -177,7 +177,7 @@ sudo apt-get install -y $(cat make-fnnas/script/ubuntu2404-make-fnnas-depends)
 - `sudo ./renas -k 6.12.63_6.18.3` : Use default configuration, specify multiple kernels to package for all models of TV boxes, kernel packages connected with `_`.
 - `sudo ./renas -k 6.12.63_6.18.3 -a true` : Use default configuration, specify multiple kernels to package for all models of TV boxes, kernel packages connected with `_`. Automatically upgrade to the latest kernel of the same series.
 
-## Use GitHub Actions for Compilation
+## Use GitHub Actions for Packaging fnnas image
 
 1. Workflow configuration files are located in [.github/workflows](.github/workflows).
 
@@ -187,12 +187,13 @@ sudo apt-get install -y $(cat make-fnnas/script/ubuntu2404-make-fnnas-depends)
 - name: Build FnNAS
   uses: ophub/fnnas@main
   with:
+    build_target: fnnas
     fnnas_path: fnnas/*.img.xz
     fnnas_board: s905d_s905x3_s922x_s905x
     fnnas_kernel: 6.12.y
 ```
 
-- ### GitHub Actions Input Parameter Description
+- ### GitHub Actions Packaging fnnas Image
 
 The related parameters correspond to the `local packaging command`, please refer to the above description.
 
@@ -206,15 +207,19 @@ The related parameters correspond to the `local packaging command`, please refer
 | fnnas_size      | 512/6144      | Set the size of the system `BOOTFS` and `ROOTFS` partitions. Function refers to `-s` |
 | builder_name    | None          | Set the FnNAS system `builder signature`. Function refers to `-n` |
 
-- ### GitHub Actions Output Variable Description
+- ### Explanation of Parameters for Local FnNAS Kernel Build
 
-Uploading to `Releases` requires setting `Workflow Read and Write permissions` for the repository. See [Usage Instructions](https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/documents#2-set-up-private-variable-github_token-etc) for details
+| Parameter | Meaning | Description |
+| :-------- | :------ | :---------- |
+| -r | debs_repo | Specifies the `<owner>/<repo>` of the debs kernel repository on github.com. Default value: `ophub/fnnas` |
+| -k | debs_version | Specifies the [kernel](https://github.com/ophub/fnnas/releases/tag/kernel_fnnas) name/version, e.g., `-k 6.12.63`. Default value: `6.12.y` |
+| -e | debs_install | Sets whether to install official `.deb` kernel packages for different platforms. Options: `amlogic` / `rockchip` / `allwinner` / `none`. Default value: `none` |
+| -t | dtbs_install | Sets whether to install additional `dtbs` files missing from the official release. Options: `true` / `false`. Default value: `false` |
 
-| Parameter                        | Default       | Description                           |
-|----------------------------------|---------------|---------------------------------------|
-| `${{ env.PACKAGED_OUTPUTPATH }}` | out           | FnNAS system files output path      |
-| `${{ env.PACKAGED_OUTPUTDATE }}` | 04.13.1058    | Packaging date (month.day.hourminute) |
-| `${{ env.PACKAGED_STATUS }}`     | success       | Packaging status: success / failure   |
+- `sudo ./rekernel` : Uses default configuration. Does not install dtbs packages nor supplement dtbs files, packages the kernel in the current fnnas image.
+- `sudo ./rekernel -e amlogic` : First installs the `amlogic` deb kernel packages into the current system, then proceeds with kernel packaging.
+- `sudo ./rekernel -t true` : First installs additional `dtbs` files (missing from official sources) into the current system, then proceeds with kernel packaging.
+- `sudo ./rekernel -e allwinner -t false` : First installs the `allwinner` deb kernel packages into the current system, does not install additional `dtbs` files, and then proceeds with kernel packaging.
 
 ## Compiling fnnas Kernel using GitHub Actions
 
@@ -225,11 +230,33 @@ For details on how to compile the FnNAS-specific kernel, please refer to the ins
   uses: ophub/fnnas@main
   with:
     build_target: kernel
-    fnnas_path: fnnas/*.img  # Set the path of the official Arm64 original FnNAS image file.
-    debs_version: 6.12.y     # Specify the kernel version. Currently, only 6.12.y is available.
-    debs_install: amlogic    # Specify the device platform. Options: amlogic / rockchip / allwinner / none
-    dtbs_install: true       # Automatically add DTB files missing from the official. Options: true / false
+    fnnas_path: fnnas/*.img
+    debs_version: 6.12.y
+    debs_install: amlogic
+    dtbs_install: true
 ```
+
+The relevant parameters correspond to the `local packaging command`. Please refer to the instructions above.
+
+| Parameter        | Default       | Description                                  |
+|------------------|---------------|----------------------------------------------|
+| fnnas_path       | None          | Sets the path to the official original Arm64 FnNAS image file. |
+| debs_repo        | ophub/fnnas   | Sets the `<owner>/<repo>` of the debs kernel repository on github.com. Refer to `-r` for functionality. |
+| debs_version     | 6.12.y        | Sets the kernel version. Refer to `-k` for functionality. |
+| debs_install     | none          | Sets whether to install official kernel packages in `.deb` format. Refer to `-e` for functionality. |
+| dtbs_install     | false         | Sets whether to install additional `dtbs` files missing from the official release. Refer to `-t` for functionality. |
+
+- ### GitHub Actions Output Variable Description
+
+fnnas and kernel use the same output parameters.
+
+Uploading to `Releases` requires setting `Workflow Read and Write permissions` for the repository. See [Usage Instructions](https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/documents#2-set-up-private-variable-github_token-etc) for details
+
+| Parameter                        | Default       | Description                           |
+|----------------------------------|---------------|---------------------------------------|
+| `${{ env.PACKAGED_OUTPUTPATH }}` | out           | FnNAS system files output path      |
+| `${{ env.PACKAGED_OUTPUTDATE }}` | 04.13.1058    | Packaging date (month.day.hourminute) |
+| `${{ env.PACKAGED_STATUS }}`     | success       | Packaging status: success / failure   |
 
 ## FnNAS Contributors
 

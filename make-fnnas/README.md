@@ -2,26 +2,24 @@
 
 View Chinese description | [查看中文说明](README.cn.md)
 
-In the related directories, some files needed for compiling OpenWrt are stored.
+Some files required for compiling FnNAS are stored in the relevant directories.
 
-## openwrt-files
+## fnnas-files
 
-The files stored here are related files needed when packaging OpenWrt. Among them, the files under the `common-files` directory are general files, the files under the `platform-files` directory are files for each platform, and the files under the `different-files` directory are differential files for different devices.
+The files stored here are relevant files required when packaging FnNAS. Among them, the `common-files` directory contains general files, the `platform-files` directory contains files for various platforms, and the `different-files` directory contains files specific to different devices.
 
-- System files needed will be automatically downloaded from the [ophub/amlogic-s9xxx-armbian](https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/build-armbian/armbian-files) repository to the `platform-files` and `different-files` directories.
+- Required system files will be automatically downloaded from the [ophub/amlogic-s9xxx-armbian](https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/build-armbian/armbian-files) repository to the `platform-files` and `different-files` directories.
 
-- The firmware needed will be automatically downloaded from the [ophub/firmware](https://github.com/ophub/firmware) repository to the `common-files/lib/firmware` directory.
-
-- The necessary installation/update scripts will be automatically downloaded from the [ophub/luci-app-amlogic](https://github.com/ophub/luci-app-amlogic) repository to the `common-files/usr/sbin` directory.
+- Required firmware will be automatically downloaded from the [ophub/firmware](https://github.com/ophub/firmware) repository to the `common-files/usr/lib/firmware` directory.
 
 ## kernel
 
-Create a folder corresponding to the version number under the `kernel` directory, such as `stable/5.10.125`. Multiple kernels create directories in sequence and put the corresponding kernel files into them. Kernel files can be downloaded from the [kernel](https://github.com/ophub/kernel) repository, or you can [customize the compilation](https://github.com/ophub/amlogic-s9xxx-armbian/tree/main/compile-kernel). If the kernel files are not manually downloaded and stored, the script will automatically download from the kernel repository during compilation.
+Create directories to store kernel files under the `kernel` directory, such as `6.12.41/6.12.41-amlogic`. If you have multiple kernels, create directories sequentially and place the corresponding kernel files in them. Kernel files can be downloaded from the [kernel_fnnas](https://github.com/ophub/fnnas/releases/tag/kernel_fnnas) repository, or you can refer to the kernel compilation instructions on the homepage to compile them yourself. If kernel files are not downloaded and stored manually, the script will automatically download them from the kernel repository during compilation.
 
 ## u-boot
 
-System boot files, according to different versions of the kernel, will be automated by installation/update and other related scripts when needed. The necessary u-boot will be automatically downloaded from the [ophub/u-boot](https://github.com/ophub/u-boot) repository to the `u-boot` directory.
+System boot loader files. Depending on the kernel version, these will be handled automatically by installation/update scripts when needed. The required u-boot files will be automatically downloaded from the [ophub/u-boot](https://github.com/ophub/u-boot) repository to the `u-boot` directory.
 
 ## scripts
 
-When executing `remake`, the required dependency packages for the current server environment will be installed automatically. Other script files are used to assist with compiling or building the OpenWrt system.
+Dependency packages required for the current server environment will be automatically installed when executing `renas` and `remake`. Other script files are used to assist in compiling or creating the FnNAS system.

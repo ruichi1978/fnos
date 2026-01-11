@@ -155,7 +155,7 @@ sudo apt-get install -y $(cat make-fnnas/script/ubuntu2404-make-fnnas-depends)
 
 4. 进入 `~/fnnas` 根目录，然后运行 `sudo ./renas -b s905x3 -k 6.12.63` 命令即可生成指定 board 的 FnNAS 镜像文件。生成的文件保存在 `~/fnnas/out` 目录里。
 
-- ### 本地化打包参数说明
+- ### 本地化打包镜像参数说明
 
 | 参数  | 含义       | 说明        |
 | ---- | ---------- | ---------- |
@@ -175,7 +175,7 @@ sudo apt-get install -y $(cat make-fnnas/script/ubuntu2404-make-fnnas-depends)
 - `sudo ./renas -k 6.12.63_6.18.3` : 使用默认配置，指定多个内核，进行全部型号电视盒子进行打包, 内核包使用 `_` 进行连接。
 - `sudo ./renas -k 6.12.63_6.18.3 -a true` : 使用默认配置，指定多个内核，进行全部型号电视盒子进行打包, 内核包使用 `_` 进行连接。自动升级到同系列最新内核。
 
-## 使用 GitHub Actions 进行编译
+## 使用 GitHub Actions 进行镜像编译
 
 1. 关于 Workflows 文件的配置在 [.github/workflows](.github/workflows) 文件里。
 
@@ -185,12 +185,13 @@ sudo apt-get install -y $(cat make-fnnas/script/ubuntu2404-make-fnnas-depends)
 - name: Build FnNAS
   uses: ophub/fnnas@main
   with:
+    build_target: fnnas
     fnnas_path: fnnas/*.img.xz
     fnnas_board: s905d_s905x3_s922x_s905x
     fnnas_kernel: 6.12.y
 ```
 
-- ### GitHub Actions 输入参数说明
+- ### GitHub Actions 制作 fnnas 镜像参数说明
 
 相关参数与`本地打包命令`相对应，请参考上面的说明。
 
@@ -204,15 +205,19 @@ sudo apt-get install -y $(cat make-fnnas/script/ubuntu2404-make-fnnas-depends)
 | fnnas_size       | 512/6144      | 设置系统 BOOTFS 和 ROOTFS 分区的大小，功能参考 `-s`  |
 | builder_name     | 无             | 设置 FnNAS 系统构建者签名，功能参考 `-n`           |
 
-- ### GitHub Actions 输出变量说明
+- ### 本地化制作 fnnas 内核参数说明
 
-上传到 `Releases` 需要给仓库设置 `Workflow 读写权限`，详见[使用说明](https://github.com/ophub/amlogic-s9xxx-armbian/blob/main/documents/README.cn.md#2-设置隐私变量-github_token)。
+| 参数  | 含义          | 说明        |
+| ---- | ------------- | ---------- |
+| -r   | debs_repo     | 指定 github.com 的 debs 内核仓库的 `<owner>/<repo>`。默认值：`ophub/fnnas` |
+| -k   | debs_version  | 指定 [kernel](https://github.com/ophub/fnnas/releases/tag/kernel_fnnas) 名称，如 `-k 6.12.63` 。默认值：`6.12.y` |
+| -e   | debs_install  | 设置是否安装官方提供的不同平台的 debs 格式内核包。选项：`amlogic` / `rockchip` / `allwinner` / `none`。默认值：`none` |
+| -t   | dtbs_install  | 设置是否补充安装官方没有的 dtbs 文件。可选项 `true` / `false`。默认值：`false` |
 
-| 参数                              | 默认值         | 说明                       |
-|----------------------------------|---------------|----------------------------|
-| `${{ env.PACKAGED_OUTPUTPATH }}` | out           | FnNAS 系统文件输出路径      |
-| `${{ env.PACKAGED_OUTPUTDATE }}` | 04.13.1058    | 打包日期（月.日.时分）         |
-| `${{ env.PACKAGED_STATUS }}`     | success       | 打包状态：success / failure  |
+- `sudo ./rekernel` : 使用默认配置。不安装 dtbs 包也不补充 dtbs文件，把当前 fnnas 镜像里的内核进行打包。
+- `sudo ./rekernel -e amlogic` : 先把 amlogic 的 debs 内核包安装到当前系统里，然后在进行内核打包。
+- `sudo ./rekernel -t true` : 先把官方没有的 dtbs 文件补充安装到当前系统里，然后在进行内核打包。
+- `sudo ./rekernel -e allwinner -t false` : 先把 allwinner 的 debs 内核包安装到当前系统里，不补充安装 dtbs 文件，然后进行内核打包。
 
 ## 使用 GitHub Actions 编译 fnnas 内核
 
@@ -223,11 +228,34 @@ sudo apt-get install -y $(cat make-fnnas/script/ubuntu2404-make-fnnas-depends)
   uses: ophub/fnnas@main
   with:
     build_target: kernel
-    fnnas_path: fnnas/*.img  # 指定 FnNAS 镜像文件路径
-    debs_version: 6.12.y     # 指定内核版本。目前只有 6.12.y 可选
-    debs_install: amlogic    # 指定设备平台。选项：amlogic / rockchip / allwinner / none
-    dtbs_install: true       # 是否自动添加飞牛官方没有的 DTB 文件。选项： true / false
+    fnnas_path: fnnas/*.img
+    debs_repo: ophub/fnnas
+    debs_version: 6.12.y
+    debs_install: amlogic
+    dtbs_install: true
 ```
+
+相关参数与`本地打包命令`相对应，请参考上面的说明。
+
+| 参数              | 默认值         | 说明                                         |
+|------------------|---------------|----------------------------------------------|
+| fnnas_path       | 无            | 设置官方 Arm64 原版 FnNAS 镜像文件的路径。        |
+| debs_repo        | ophub/fnnas   | 指定 github.com 的 debs 内核仓库的 `<owner>/<repo>`，功能参考 `-r` |
+| debs_version     | 6.12.y        | 设置内核版本号。功能参考 `-k`                    |
+| debs_install     | none          | 设置是否安装官方提供的不同平台的 debs 格式内核包。功能参考 `-e`   |
+| dtbs_install     | false         | 设置是否补充安装官方没有的 dtbs 文件。功能参考 `-t` |
+
+- ### GitHub Actions 输出变量说明
+
+飞牛镜像和内核使用的输出参数一样。
+
+上传到 `Releases` 需要给仓库设置 `Workflow 读写权限`，详见[使用说明](https://github.com/ophub/amlogic-s9xxx-armbian/blob/main/documents/README.cn.md#2-设置隐私变量-github_token)。
+
+| 参数                              | 默认值         | 说明                       |
+|----------------------------------|---------------|----------------------------|
+| `${{ env.PACKAGED_OUTPUTPATH }}` | fnnas/out     | FnNAS 系统和内核文件输出路径   |
+| `${{ env.PACKAGED_OUTPUTDATE }}` | 04.13.1058    | 打包日期（月.日.时分）         |
+| `${{ env.PACKAGED_STATUS }}`     | success       | 打包状态：success / failure  |
 
 ## FnNAS 贡献者
 
